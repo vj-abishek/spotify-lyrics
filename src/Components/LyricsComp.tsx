@@ -3,6 +3,7 @@ import queryString from 'query-string'
 import axios from 'axios'
 import { Redirect } from 'react-router-dom'
 
+console.log(process.env)
 export default function LyricsComp(props: any) {
   const [error, setError] = useState(false)
   const [track, setTrack] = useState()
@@ -12,6 +13,77 @@ export default function LyricsComp(props: any) {
   const [songName, setSongName] = useState()
 
   useEffect(() => {
+    //
+    const fetchSong = () => {
+      axios
+        .get('https://api.spotify.com/v1/me/player/currently-playing', {
+          headers: {
+            Authorization: `Bearer ${localStorage.access_token}`
+          }
+        })
+        .then(data => {
+          if (data.status === 200) {
+            const da: any = data.data
+            // console.log(da)
+            if (da.is_playing) {
+              // console.log(data)
+
+              const name: any = da.item.name
+              setSongName(name)
+              // console.log(name)
+              axios
+                .get(
+                  `https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.search?q_track=${name}&apikey=${process.env.REACT_APP_API_KEY}&page_size=3&page=1&s_track_rating=desc`
+                )
+                .then(data => {
+                  const da: any = data
+                  const id = data.data.message.body.track_list[0].track.track_id
+
+                  // console.log(id)
+                  axios
+                    .get(
+                      `https://cors-anywhere.herokuapp.com/http://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${id}&apikey=${process.env.REACT_APP_API_KEY}`
+                    )
+                    .then(data => {
+                      try {
+                        const da: any = data
+                        const lyrc: any =
+                          da.data.message.body.lyrics.lyrics_body
+
+                        setLyrics(lyrc)
+                        setGotLyrics(true)
+                      } catch (err) {
+                        setError(true)
+                      }
+                    })
+                  setTrack(da)
+                  console.log(track)
+                })
+                .catch(err => {
+                  setError(true)
+                })
+            }
+          } else {
+            // console.log('Im here heheh')
+            let dummy: any = 'Try to play the song'
+            setLyrics(dummy)
+            setGotLyrics(true)
+          }
+        })
+        .catch(err => {
+          setError(true)
+
+          axios
+            .get(
+              `${process.env.URL ||
+                'http://localhost:8000'}/refresh_token#refresh_token=${
+                localStorage.refresh_token
+              }`
+            )
+            .then(data => console.log(data))
+        })
+    }
+
     const parsedHash: any = queryString.parse(props.location.hash)
     if (localStorage.access_token) {
       // console.log('Im here')
@@ -32,72 +104,7 @@ export default function LyricsComp(props: any) {
       localStorage.setItem('refresh_token', parsedHash.refresh_token)
       fetchSong()
     }
-  }, [props.location.hash])
-
-  const fetchSong = () => {
-    axios
-      .get('https://api.spotify.com/v1/me/player/currently-playing', {
-        headers: {
-          Authorization: `Bearer ${localStorage.access_token}`
-        }
-      })
-      .then(data => {
-        if (data.status === 200) {
-          const da: any = data.data
-          // console.log(da)
-          if (da.is_playing) {
-            // console.log(data)
-
-            const name: any = da.item.name
-            setSongName(name)
-            // console.log(name)
-            axios
-              .get(
-                `https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.search?q_track=${name}&apikey=${process.env.REACT_APP_API_KEY}&page_size=3&page=1&s_track_rating=desc`
-              )
-              .then(data => {
-                const da: any = data
-                const id = data.data.message.body.track_list[0].track.track_id
-
-                // console.log(id)
-                axios
-                  .get(
-                    `https://cors-anywhere.herokuapp.com/http://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${id}&apikey=${process.env.REACT_APP_API_KEY}`
-                  )
-                  .then(data => {
-                    try {
-                      const da: any = data
-                      const lyrc: any = da.data.message.body.lyrics.lyrics_body
-
-                      setLyrics(lyrc)
-                      setGotLyrics(true)
-                    } catch (err) {
-                      setError(true)
-                    }
-                  })
-                setTrack(da)
-              })
-              .catch(err => {
-                setError(true)
-              })
-          }
-        } else {
-          // console.log('Im here heheh')
-          let dummy: any = 'Try to play the song'
-          setLyrics(dummy)
-          setGotLyrics(true)
-        }
-      })
-      .catch(err => {
-        setError(true)
-
-        axios
-          .get(
-            `http://localhost:8000/refresh_token#refresh_token=${localStorage.refresh_token}`
-          )
-          .then(data => console.log(data))
-      })
-  }
+  }, [props.location.hash, track])
 
   return error ? (
     <h1 style={{ textAlign: 'center' }}>
