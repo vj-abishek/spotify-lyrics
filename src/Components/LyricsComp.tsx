@@ -10,11 +10,13 @@ export default function LyricsComp(props: any) {
   const [gotLyrics, setGotLyrics] = useState(false)
   const [songId, setId] = useState('15vzANxN8G9wWfwAJLLMCg')
   const [songName, setSongName] = useState()
+  const [tried, setTried] = useState(true)
 
   useEffect(() => {
     //
     if (gotLyrics === false) {
       const fetchSong = () => {
+        if (gotLyrics) return
         axios
           .get('https://api.spotify.com/v1/me/player/currently-playing', {
             headers: {
@@ -22,46 +24,62 @@ export default function LyricsComp(props: any) {
             },
           })
           .then((data) => {
-            if (data.status === 200 && gotLyrics === false) {
-              const da: any = data.data
-              console.log(da)
-              if (da.is_playing) {
-                console.log(data)
+            // https://lyric-api.herokuapp.com/api/find/artist/song
+            const da: any = data.data
+            const name: any = da.item.name
+            const artist: any = da.item.album.artists[0].name
+            if (gotLyrics === false && tried === true) {
+              axios
+                .get(
+                  `https://lyric-api.herokuapp.com/api/find/${artist}/${name}`
+                )
+                .then((data) => {
+                  setSongName(name)
+                  setLyrics(data.data.lyric)
 
-                const name: any = da.item.name
-                setSongName(name)
-                console.log(name)
-                axios
-                  .get(`https://spotify-server.now.sh/track/${name}`)
-                  .then((data) => {
-                    const da: any = data
-                    const id =
-                      data.data.message.body.track_list[0].track.track_id
+                  if (data.data.err !== 'none') {
+                    if (data.status === 200 && gotLyrics === false) {
+                      console.log(da)
+                      if (da.is_playing) {
+                        setSongName(name)
+                        console.log(name)
+                        axios
+                          .get(`https://spotify-server.now.sh/track/${name}`)
+                          .then((data) => {
+                            const id =
+                              data.data.message.body.track_list[0].track
+                                .track_id
 
-                    console.log(id)
-                    axios
-                      .get(`https://spotify-server.now.sh/lyrics/${id}`)
-                      .then((data) => {
-                        try {
-                          const da: any = data
-                          const lyrc: any =
-                            da.data.message.body.lyrics.lyrics_body
+                            console.log(id)
+                            axios
+                              .get(`https://spotify-server.now.sh/lyrics/${id}`)
+                              .then((data) => {
+                                try {
+                                  const das: any = data
+                                  const lyrc: any =
+                                    das.data.message.body.lyrics.lyrics_body
 
-                          setLyrics(lyrc)
-                          setGotLyrics(true)
-                        } catch (err) {
-                          setError(true)
-                        }
-                      })
-                    // setTrack(da)
-                  })
-                  .catch((err) => {
-                    setError(true)
-                  })
-              }
+                                  setLyrics(lyrc)
+                                  setGotLyrics(true)
+                                } catch (err) {
+                                  setError(true)
+                                }
+                              })
+                            // setTrack(da)
+                          })
+                          .catch((err) => {
+                            setError(true)
+                          })
+                      }
+                    }
+                  } else {
+                    setGotLyrics(true)
+                  }
+                })
+                .catch(() => setTried(false))
             } else {
               console.log('Im here heheh')
-              let dummy: any = 'Try to play the song'
+              let dummy: any = 'Cannot find the lyrics'
               setLyrics(dummy)
               setGotLyrics(true)
             }
@@ -102,7 +120,7 @@ export default function LyricsComp(props: any) {
     } else {
       return
     }
-  }, [props.location.hash, gotLyrics])
+  }, [props.location.hash, gotLyrics, tried])
 
   return error ? (
     <h1 style={{ textAlign: 'center' }}>
