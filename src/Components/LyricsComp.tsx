@@ -89,11 +89,14 @@ export default function LyricsComp(props: any) {
 
             axios
               .get(
-                `${
-                  process.env.URL || 'http://localhost:8000'
-                }/refresh_token#refresh_token=${localStorage.refresh_token}`
+                `https://spotify-server.now.sh/refresh_token#refresh_token=${localStorage.refresh_token}`
               )
-              .then((data) => console.log(data))
+              .then((data) => {
+                console.log(data)
+                if (data) {
+                  localStorage.access_token = data
+                }
+              })
           })
       }
 
@@ -128,42 +131,42 @@ export default function LyricsComp(props: any) {
       An error occured. Try again
     </h1>
   ) : (
-    <div className='login' style={{ margin: '0 auto' }}>
-      {gotLyrics ? (
-        <>
-          <h2>{songName} : </h2>
+      <div className='login' style={{ margin: '0 auto' }}>
+        {gotLyrics ? (
+          <>
+            <h2>{songName} : </h2>
 
-          {lyrics.split('\n').map((i, index) => {
-            return (
-              <p
-                style={{
-                  margin: '30 auto',
-                  fontSize: '26px',
-                  padding: '5px',
-                  textAlign: 'center',
-                }}
-                key={index}
-              >
-                {i}
-              </p>
-            )
-          })}
-          <a className='button-login' href='/lyrics'>
-            refresh
+            {lyrics.split('\n').map((i, index) => {
+              return (
+                <p
+                  style={{
+                    margin: '30 auto',
+                    fontSize: '26px',
+                    padding: '5px',
+                    textAlign: 'center',
+                  }}
+                  key={index}
+                >
+                  {i}
+                </p>
+              )
+            })}
+            <a className='button-login' href='/lyrics'>
+              refresh
           </a>
-          <h2>Recently played</h2>
-          <iframe
-            title='Recently Played Song'
-            src={`https://open.spotify.com/embed/track/${songId}`}
-            width='300'
-            height='380'
-            frameBorder='0'
-            allow='encrypted-media'
-          ></iframe>
-        </>
-      ) : (
-        ''
-      )}
-    </div>
-  )
+            <h2>Recently played</h2>
+            <iframe
+              title='Recently Played Song'
+              src={`https://open.spotify.com/embed/track/${songId}`}
+              width='300'
+              height='380'
+              frameBorder='0'
+              allow='encrypted-media'
+            ></iframe>
+          </>
+        ) : (
+            ''
+          )}
+      </div>
+    )
 }
