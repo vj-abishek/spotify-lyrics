@@ -13,7 +13,7 @@ import {
 function App() {
   return (
     <Router>
-      {localStorage.access_token ? <Redirect to='/lyrics' /> : ''}
+      {(localStorage.access_token || localStorage.access_token === undefined) && <Redirect to='/lyrics' /> }
       <Switch>
         <Route exact path='/' component={Login} />
 
