@@ -128,7 +128,7 @@ export default function LyricsComp(props: any) {
   return error ? (
     <h1 style={{ textAlign: 'center' }}>
       {!localStorage.access_token ? <Redirect to='/' /> : ''}
-      An error occured. Try again
+      Try to play song and come here or an error has occured.
     </h1>
   ) : (
     <div className='login' style={{ margin: '0 auto' }}>
