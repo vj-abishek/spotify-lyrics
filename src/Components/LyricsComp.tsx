@@ -44,9 +44,7 @@ export default function LyricsComp(props: any) {
                         setSongName(name);
                         console.log(name);
                         axios
-                          .get(
-                            `https://spotify-lyrics.now.sh/api/track/${name}`
-                          )
+                          .get(`https://spotify-server.now.sh/track/${name}`)
                           .then((data) => {
                             const id =
                               data.data.message.body.track_list[0].track
@@ -54,9 +52,7 @@ export default function LyricsComp(props: any) {
 
                             console.log(id);
                             axios
-                              .get(
-                                `https://spotify-lyrics.now.sh/api/lyrics/${id}`
-                              )
+                              .get(`https://spotify-server.now.sh/lyrics/${id}`)
                               .then((data) => {
                                 try {
                                   const das: any = data;
@@ -93,7 +89,7 @@ export default function LyricsComp(props: any) {
 
             axios
               .get(
-                `https://spotify-lyrics.now.sh/api/refresh_token#refresh_token=${localStorage.refresh_token}`
+                `https://spotify-server.now.sh/refresh_token#refresh_token=${localStorage.refresh_token}`
               )
               .then((data) => {
                 console.log(data);
