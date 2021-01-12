@@ -11,9 +11,11 @@ import {
 } from 'react-router-dom';
 
 function App() {
+  const { pathname } = window.location;
   return (
     <Router>
       {localStorage.access_token !== undefined && <Redirect to='/lyrics' />}
+      {pathname === '/callback' && <Redirect to='/lyrics' />}
       <Switch>
         <Route exact path='/' component={Login} />
 
